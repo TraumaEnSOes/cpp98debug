@@ -24,10 +24,11 @@ protected:
   void init( const char *cfg ) {
     std::ifstream cfgFile( cfg );
     int lineNumber = 0;
+    std::string line;
 
     while( true ) {
       ++lineNumber;
-      std::string line;
+      
       std::getline( cfgFile, line );
 
       if( !cfgFile.good( ) ) break; // Cualquier error, terminamos.
@@ -166,14 +167,15 @@ public:
       return *this;
     }
   };
-
+  // 'assertion' opcional, para depurar solo ciertos casos.
   output operator( )( const char *module, bool assertion = true ) {
     std::map< const char *, bool, StringComparator >::const_iterator iter = m_map.find( module );
 
     return output( module, ( ( iter == m_map.end( ) ) ? m_default : iter->second ) && assertion );
   }
-  output operator( )( bool, const char *module, bool assertion = true ) {
-    return output( module, assertion );
+  // Para ignorar lo indicado en el archivo de configuración.
+  output operator( )( bool forced, const char *module, bool assertion = true ) {
+    return forced ? output( module, assertion ) : output( module, false );
   }
 
   Cpp98DebugBase( ) : m_default( true ), m_map( ) {
@@ -196,6 +198,6 @@ public:
 typedef Cpp98DebugGeneric< char, std::char_traits< char > > Cpp98Debug;
 
 #define TRACE98( LOG, MOD ) ( LOG( MOD ) << __LINE__ << ": " )
-#define CTRACE98( LOG, MOD, ASSERTION ) ( LOG( MOD, ( ASSERTION ) ) )
+#define CTRACE98( LOG, MOD, ASSERTION ) ( LOG( MOD, ( ASSERTION ) ) << __LINE__ << ": " )
 
 #endif
