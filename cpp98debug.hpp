@@ -46,15 +46,6 @@ protected:
         m_map[line.c_str( ) + 1] = process;
       }
     }
-
-    std::cout << "defecto: " << m_default << '\n';
-    std::map< const char *, bool, StringComparator >::const_iterator iter( m_map.begin( ) );
-
-    while( iter != m_map.end( ) ) {
-      std::cout << "Identificador " << iter->first << ": " << iter->second << '\n';
-      ++iter;
-    }
-    std::cout << std::endl;
   }
 
 public:
