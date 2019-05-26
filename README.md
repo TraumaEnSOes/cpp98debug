@@ -17,7 +17,7 @@ que dichas trazas NO se volcarán al archivo.
 
 NO PUEDE EXISTIR NINGUNA SEPARACIÓN entre el '0' o '1' y el TEXTO. Se ve mejor en este ejemplo de configuración:
 
-1*
+1*<br>
 0mimodulo
 
 En este ejemplo, las trazas asociadas a 'mimodulo' no se vuelcan.
