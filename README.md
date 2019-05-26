@@ -2,7 +2,7 @@
 
 Mínimo sistema de trazas mediante archivo de configuración, para C++98
 
-Por temas de trabajo, necesita un sistema en el que poder realizar ciertas trazas en un archivo propio. Además, necesitaba que
+Por temas de trabajo, necesitaba un sistema en el que poder realizar ciertas trazas en un archivo propio. Además, necesitaba que
 fuera configurable mediante un archivo externo, para no tener que estar recompilando continuamente. Y, a ser posible, que no fuera
 necesario tocar los archivos de dependencias del proyecto.
 
