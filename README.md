@@ -17,8 +17,8 @@ que dichas trazas NO se volcarán al archivo.
 
 NO PUEDE EXISTIR NINGUNA SEPARACIÓN entre el TEXTO y el '0' o '1'. Se ve mejor en este ejemplo de configuración:
 
-Entrada/UDP/MONI1
-Entrada/UDP/CFGP0
+Entrada/UDP/MONI1<br>
+Entrada/UDP/CFGP0<br>
 *0
 
 En este ejemplo, las trazas asociadas a 'Entrada/UDP/MONI' si se vuelcan.
