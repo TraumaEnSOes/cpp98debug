@@ -1,6 +1,6 @@
 #include "cpp98debug.hpp"
 
-Cpp98DebugBase *Cpp98DebugBase::m_singleton = NULL;
+Cpp98Debug *Cpp98Debug::m_singleton = NULL;
 
 int main( ) {
   Cpp98Debug log( ::std::cout, "test.cfg" );

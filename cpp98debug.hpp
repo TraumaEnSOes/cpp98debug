@@ -8,21 +8,25 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 
-class Cpp98DebugBase {
+class Cpp98Debug {
 private:
   struct StringComparator {
     bool operator( )( const char *str1, const char *str2 ) const { return strcmp( str1, str2 ) < 0; }
   };
 
   bool m_default;
+  std::basic_ostream< char > *m_os;
+  bool m_freeOs;
   std::map< const char *, bool, StringComparator > m_map;
 
-  static Cpp98DebugBase *m_singleton;
+  static Cpp98Debug *m_singleton;
 
 protected:
-  void init( const char *cfg ) {
-    std::ifstream cfgFile( cfg );
+  void init( std::basic_istream< char > &cfgFile ) {
+    m_singleton = this;
+  
     int lineNumber = 0;
     std::string line;
 
@@ -48,21 +52,32 @@ protected:
       }
     }
   }
+  void init( const char *cfg ) {
+    std::ifstream cfgFile( cfg );
+  
+    if( !cfgFile.is_open( ) ) {
+      std::cerr << "CPP98DEBUG: Error al abrir el archivo de configuracion " << cfg << '\n';
+    } else {
+      init( cfgFile );
+    }
+  }
 
 public:
-  virtual void flush( const char *str ) = 0;
+  void flush( const char *str ) {
+    ( *m_os ) << str << std::endl;
+  }
 
-  static Cpp98DebugBase &singleton( ) { return *m_singleton; }
+  static Cpp98Debug &singleton( ) { return *m_singleton; }
 
   class output {
     bool m_do;
-    char m_final[4096];
-    char m_buff[1024];
+    char m_final[1024];
+    char m_buff[128];
 
   public:
     ~output( ) {
       if( m_do ) {
-        Cpp98DebugBase::singleton( ).flush( m_final );
+        Cpp98Debug::singleton( ).flush( m_final );
       }
     }
     output( const char *module, bool d ) : m_do( d ) {
@@ -73,7 +88,10 @@ public:
     }
 
     output &flush( ) {
-      if( m_do ) { Cpp98DebugBase::singleton( ).flush( m_final ); }
+      if( m_do ) {
+        Cpp98Debug::singleton( ).flush( m_final );
+        m_final[0] = 0;
+      }
       return *this;
     }
     output &operator<<( bool v ) {
@@ -178,24 +196,51 @@ public:
     return forced ? output( module, assertion ) : output( module, false );
   }
 
-  Cpp98DebugBase( ) : m_default( true ), m_map( ) {
-    m_singleton = this;
+  ~Cpp98Debug( ) {
+    if( m_freeOs && m_os ) {
+      ( (std::ofstream *)m_os )->close( );
+      delete m_os;
+    }
+  }
+  template< typename OT, typename CT > Cpp98Debug( std::basic_ostream< char, OT > &os, std::basic_istream< char, CT > &cfg ) :
+    m_default( true ),
+    m_os( &os ),
+    m_freeOs( false ),
+    m_map( )
+  {
+    init( cfg );
+  }
+  template< typename OT > Cpp98Debug( std::basic_ostream< char, OT > &os, const char *cfg ) :
+    m_default( true ),
+    m_os( &os ),
+    m_freeOs( false ),
+    m_map( )
+  {
+    init( cfg );
+  }
+  template< typename CT > Cpp98Debug( const char *os, std::basic_istream< char, CT > &cfg ) :
+    m_default( true ),
+    m_os( NULL ),
+    m_freeOs( false ),
+    m_map( )
+  {
+    std::ofstream *pos = new std::ofstream( os );
+    if( !( pos->is_open( ) ) ) {
+      throw std::runtime_error( "CPP98DEBUG: Error al abrir el archivo de trazas.\n" );
+    }
+    m_os = pos;
+    m_freeOs = true;
+    init( cfg );
+  }
+  template< typename OT > Cpp98Debug( std::basic_ostream< char, OT > &os, bool def = 1 ) :
+    m_default( def ),
+    m_os( NULL ),
+    m_freeOs( false ),
+    m_map( )
+  {
+    Cpp98Debug::m_singleton = this;
   }
 };
-
-template< typename T, typename TRAITS = std::char_traits< T > > class Cpp98DebugGeneric : public Cpp98DebugBase {
-  std::basic_ostream< T, TRAITS > &m_os;
-
-protected:
-  virtual void flush( const char *str ) {
-    m_os << str << std::endl;
-  }
-
-public:
-  Cpp98DebugGeneric( std::basic_ostream< T, TRAITS > &os, const char *cfg ) : m_os( os ) { Cpp98DebugBase::init( cfg ); }
-};
-
-typedef Cpp98DebugGeneric< char, std::char_traits< char > > Cpp98Debug;
 
 #define TRACE98( LOG, MOD ) ( LOG( MOD ) << __LINE__ << ": " )
 #define CTRACE98( LOG, MOD, ASSERTION ) ( LOG( MOD, ( ASSERTION ) ) << __LINE__ << ": " )
