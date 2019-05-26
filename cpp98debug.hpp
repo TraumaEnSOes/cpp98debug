@@ -23,22 +23,38 @@ private:
 protected:
   void init( const char *cfg ) {
     std::ifstream cfgFile( cfg );
+    int lineNumber = 0;
 
     while( true ) {
+      ++lineNumber;
       std::string line;
       std::getline( cfgFile, line );
 
-      if( !cfgFile.good( ) ) break;
-      if( !line.size( ) ) continue;
+      if( !cfgFile.good( ) ) break; // Cualquier error, terminamos.
+      if( line.size( ) < 2 ) continue; // Ignorar líneas en blanco o con solo un '\n'.
+      if( line[0] == '#' ) continue; // Los comentarios empiezan con '#'.
+      if( ( line[0] != '0' ) && ( line[0] != '1' ) ) { // Linea mal formada. Aviso y continuamos.
+        std::cerr << "CPP98DEBUG: Linea " << lineNumber << " incorrecta.\n";
+        continue;
+      }
 
-      if( line[0] == '*' ) {
-        m_default = ( ( line[1] == '0' ) ? false : true );
+      bool process = line[0] == '1' ? true : false;
+
+      if( line[1] == '*' ) {
+        m_default = process;
       } else {
-        bool curr = ( ( *( line.end( ) - 1 ) == '0' ) ? false : true );
-        *( line.end( ) - 1 ) = '\0';
-        m_map[line.c_str( )] = curr;
+        m_map[line.c_str( ) + 1] = process;
       }
     }
+
+    std::cout << "defecto: " << m_default << '\n';
+    std::map< const char *, bool, StringComparator >::const_iterator iter( m_map.begin( ) );
+
+    while( iter != m_map.end( ) ) {
+      std::cout << "Identificador " << iter->first << ": " << iter->second << '\n';
+      ++iter;
+    }
+    std::cout << std::endl;
   }
 
 public:
